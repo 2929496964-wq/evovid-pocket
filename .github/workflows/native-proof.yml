@@ -1,0 +1,28 @@
+name: Native proof
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: native-proof-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  simulator:
+    runs-on: macos-15
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install project generator
+        run: command -v xcodegen || brew install xcodegen
+      - name: Build and test actual native app
+        run: bash tools/native-proof.sh
+      - name: Upload actual evidence including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evovid-pocket-native-proof
+          path: evidence/
+          if-no-files-found: error
+          retention-days: 7
