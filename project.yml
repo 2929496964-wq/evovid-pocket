@@ -1,0 +1,54 @@
+name: EvoVidPocket
+options:
+  bundleIdPrefix: dev.evovid
+  deploymentTarget:
+    iOS: '16.0'
+settings:
+  base:
+    SWIFT_VERSION: '5.0'
+packages:
+  RevenueCat:
+    url: https://github.com/RevenueCat/purchases-ios.git
+    exactVersion: 5.43.0
+targets:
+  EvoVidPocket:
+    type: application
+    platform: iOS
+    sources: [Native]
+    dependencies:
+      - package: RevenueCat
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.evovid.pocket.competition
+        TARGETED_DEVICE_FAMILY: '1,2'
+        GENERATE_INFOPLIST_FILE: YES
+        MARKETING_VERSION: '0.3.0'
+        CURRENT_PROJECT_VERSION: '3'
+    info:
+      path: Generated/Info.plist
+      properties:
+        CFBundleDisplayName: EvoVid Pocket
+        UILaunchScreen: {}
+        NSLocalNetworkUsageDescription: Pair with your own EvoVid desktop to create and review videos.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+  EvoVidPocketUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [UITests]
+    dependencies:
+      - target: EvoVidPocket
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.evovid.pocket.uitests
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  EvoVidPocket:
+    build:
+      targets:
+        EvoVidPocket: all
+        EvoVidPocketUITests: [test]
+    test:
+      targets: [EvoVidPocketUITests]

@@ -1,0 +1,29 @@
+{
+  "date": "2026-09-21",
+  "native_compile": "not yet run on Apple platform",
+  "native_ui": "not yet run",
+  "revenuecat_account": "created; official email confirmation succeeded",
+  "revenuecat_project_id": "76bfcb20",
+  "revenuecat_test_purchase_verified": false,
+  "judge_demo_url": null,
+  "student_eligibility": "awaiting organizer confirmation",
+  "final_submission_ready": false,
+  "final_submission_sent": false,
+  "revenuecat_dashboard_offering": "default",
+  "revenuecat_entitlement": "evovid_pocket_pro",
+  "revenuecat_test_store_products": [
+    "monthly",
+    "yearly",
+    "lifetime"
+  ],
+  "revenuecat_offerings_verified": false,
+  "public_repository_created": true,
+  "public_source_uploaded": false,
+  "model_checks": 9,
+  "desktop_pytest_passed": 54,
+  "project_id_saved_in_devpost": true,
+  "native_demo_recorded": false,
+  "apple_platform_compilation_verified": false,
+  "public_repo_url": "https://github.com/2929496964-wq/evovid-pocket",
+  "revenuecat_email_confirmed": true
+}
