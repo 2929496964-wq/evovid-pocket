@@ -19,3 +19,8 @@ __pycache__/
 *.mobileprovision
 *.p12
 *.key
+
+# Temporary CI Test Store resources; never commit or upload compiled bundles
+Native/CIRevenueCat.plist
+.private-proof/
+public-proof/
