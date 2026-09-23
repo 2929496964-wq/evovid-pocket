@@ -33,7 +33,7 @@ final class TestStoreProofUITests: XCTestCase {
         capture("03-server-offerings-pro-locked")
         // 取消与失败不能解锁；所有结果来自 SDK callback。
         monthly.tap()
-        let dialog=app.alerts["Test Purchase"]
+        let dialog=app.alerts["Test Store Purchase"]
         XCTAssertTrue(dialog.waitForExistence(timeout:20));capture("04-official-teststore-dialog")
         dialog.buttons["Cancel"].tap();waitLabel(state,"cancelled")
         XCTAssertTrue(app.staticTexts["Pro locked"].exists);capture("05-cancelled-still-locked")
