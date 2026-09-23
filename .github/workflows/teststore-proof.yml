@@ -1,0 +1,28 @@
+name: Test Store proof
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: teststore-proof
+  cancel-in-progress: false
+jobs:
+  actual-teststore:
+    runs-on: macos-15
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install project generator
+        run: command -v xcodegen || brew install xcodegen
+      - name: Native Test Store lifecycle and redacted server verification
+        env:
+          RC_TEST_STORE_SDK_KEY: ${{ secrets.RC_TEST_STORE_SDK_KEY }}
+        run: bash tools/teststore-proof.sh
+      - name: Upload only sanitized evidence (no app bundle or xcresult)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evovid-pocket-teststore-proof
+          path: public-proof/
+          if-no-files-found: error
+          retention-days: 7
