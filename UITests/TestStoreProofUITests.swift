@@ -1,25 +1,8 @@
 // 真实 SDK + RevenueCat 测试服务器；点击官方 Test Store 弹窗，不替换 SDK、不注入成功状态。
 import XCTest
-import StoreKitTest
 import Foundation
 
 final class TestStoreProofUITests: XCTestCase {
-    // Empty Apple test environment only: no local products, grants or purchase calls.
-    // RevenueCat's own Test Store SDK, dialog, callbacks and server checks stay unchanged.
-    private var storeKitSession: SKTestSession?
-    private func prepareEmptyAppleStore() throws {
-        let empty = """
-        {"identifier":"EvoVidCIEmptyStore","nonRenewingSubscriptions":[],"products":[],"settings":{"_failTransactionsEnabled":false,"_locale":"en_US","_storefront":"USA"},"subscriptionGroups":[],"version":{"major":3,"minor":0}}
-        """
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent("EvoVidCIEmpty.storekit")
-        try Data(empty.utf8).write(to:url,options:.atomic)
-        storeKitSession = try SKTestSession(contentsOf:url)
-        guard let session = storeKitSession else { throw NSError(domain:"EvoVidCI",code:1) }
-        try session.clearTransactions()
-        XCTAssertTrue(session.allTransactions().isEmpty,"No local StoreKit purchases may be seeded")
-        let note = XCTAttachment(string:"Empty Apple StoreKit test session initialized. Purchases still use RevenueCat Test Store and server verification. This is not App Store sandbox payment proof.")
-        note.name = "Test environment scope";note.lifetime = .keepAlways;add(note)
-    }
     private func capture(_ name:String){
         let a=XCTAttachment(screenshot:XCUIScreen.main.screenshot());a.name=name;a.lifetime = .keepAlways;add(a)
     }
@@ -33,7 +16,6 @@ final class TestStoreProofUITests: XCTestCase {
     }
     func testActualPurchaseLifecycle() throws {
         continueAfterFailure=false
-        try prepareEmptyAppleStore()
         let app=XCUIApplication();app.launchArguments=["--ci-test-store"];app.launch()
         XCTAssertTrue(app.navigationBars["EvoVid Pocket"].waitForExistence(timeout:20))
         capture("01-native-home")

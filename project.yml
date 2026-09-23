@@ -9,7 +9,7 @@ settings:
 packages:
   RevenueCat:
     url: https://github.com/RevenueCat/purchases-ios.git
-    exactVersion: 5.43.0
+    exactVersion: 5.90.2
 targets:
   EvoVidPocket:
     type: application
