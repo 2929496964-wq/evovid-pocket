@@ -58,16 +58,16 @@ struct PocketView:View {
                         Text("Video rendering stays free. Pro unlocks portable storyboard export.").foregroundStyle(.secondary)
                         Label("TEST STORE ONLY · NO REAL CHARGE",systemImage:"checkmark.shield").font(.caption.bold()).foregroundStyle(.teal)
                         SecureField("Public Test Store SDK key (test_)",text:$testKey).textFieldStyle(.roundedBorder).textInputAutocapitalization(.never).autocorrectionDisabled()
-                        Button("Connect RevenueCat Test Store"){store.configure(testKey)}.disabled(store.busy)
+                        Button("Connect RevenueCat Test Store"){store.configure(testKey);if store.configured{testKey=""}}.disabled(store.busy)
                         Text(store.status).accessibilityIdentifier("purchaseState")
                         ForEach(store.packages,id:\.identifier){item in
-                            Button("Test purchase · "+item.storeProduct.localizedPriceString){store.purchase(item)}.buttonStyle(.borderedProminent).disabled(store.busy)
+                            Button("Test purchase · "+item.storeProduct.localizedPriceString){store.purchase(item)}.buttonStyle(.borderedProminent).disabled(store.busy).accessibilityIdentifier("buy_"+item.identifier)
                         }
                         HStack{Button("Refresh status"){store.refresh()};Button("Restore purchases"){store.restore()}}.disabled(!store.configured || store.busy)
                         if store.busy{ProgressView()}
-                        Label(store.isPro ? "SDK returned active pro" : "Pro locked",systemImage:store.isPro ? "lock.open":"lock")
+                        Label(store.isPro ? "SDK returned active pro" : "Pro locked",systemImage:store.isPro ? "lock.open":"lock").accessibilityIdentifier("entitlementState")
                         Text("Only an active RevenueCat entitlement unlocks export. No hardcoded success flag.").font(.caption).foregroundStyle(.secondary)
-                        Text(store.proof).font(.caption.monospaced()).textSelection(.enabled)
+                        Text(store.proof).font(.caption.monospaced()).textSelection(.enabled).accessibilityIdentifier("purchaseProof")
                         if store.isPro{ShareLink(item:store.proof){Text("Share redacted verification record")}}
                     }.padding(22).frame(maxWidth:720)
                 }.navigationTitle("Test Store")

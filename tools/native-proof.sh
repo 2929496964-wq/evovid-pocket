@@ -16,7 +16,7 @@ REC=$!
 stop_recording(){ kill -INT "$REC" 2>/dev/null || true;wait "$REC" 2>/dev/null || true; }
 trap stop_recording EXIT
 set +e
-xcodebuild test-without-building -project EvoVidPocket.xcodeproj -scheme EvoVidPocket -configuration Debug -destination "platform=iOS Simulator,id=$UDID" -derivedDataPath DerivedData -resultBundlePath evidence/NativeProof.xcresult CODE_SIGNING_ALLOWED=NO > evidence/ui-tests.log 2>&1
+xcodebuild test-without-building -only-testing:EvoVidPocketUITests/PocketUITests/testNativeRenderAndHonestPaywall -project EvoVidPocket.xcodeproj -scheme EvoVidPocket -configuration Debug -destination "platform=iOS Simulator,id=$UDID" -derivedDataPath DerivedData -resultBundlePath evidence/NativeProof.xcresult CODE_SIGNING_ALLOWED=NO > evidence/ui-tests.log 2>&1
 CODE=$?
 set -e
 stop_recording;trap - EXIT

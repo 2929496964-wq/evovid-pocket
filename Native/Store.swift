@@ -9,14 +9,28 @@ import RevenueCat
     @Published var busy=false
     @Published var configured=false
     @Published var proof="No verified purchase evidence."
+    // CI 仅在 Debug 且明确传入启动标记时读取临时配置；不把 key 传入命令参数或日志。
+    private var audit:[[String:Any]]=[]
+    init(){
+        #if DEBUG
+        guard ProcessInfo.processInfo.arguments.contains("--ci-test-store") else{return}
+        guard let url=Bundle.main.url(forResource:"CIRevenueCat",withExtension:"plist"),
+              let data=try? Data(contentsOf:url),
+              let values=(try? PropertyListSerialization.propertyList(from:data,format:nil)) as? [String:String],
+              let key=values["sdk_key"],let user=values["app_user_id"],user.hasPrefix("evovid-ci-") else{
+            status="Test Store CI configuration missing. No purchase attempted.";return
+        }
+        configure(key,appUserID:user)
+        #endif
+    }
     // 配置一次真实 SDK，失败时不解锁任何权限。
-    func configure(_ raw:String){
+    func configure(_ raw:String,appUserID:String?=nil){
         #if DEBUG
         let key=raw.trimmingCharacters(in:.whitespacesAndNewlines)
         guard key.hasPrefix("test_"),key.count>12,!key.contains(" ") else{status="Enter a public Test Store SDK key (test_). Never enter a secret key.";return}
         guard !configured else{refresh();return}
-        Purchases.logLevel = .warn
-        Purchases.configure(withAPIKey:key);configured=true;refresh()
+        Purchases.logLevel = .error
+        Purchases.configure(withAPIKey:key,appUserID:appUserID);configured=true;refresh()
         #else
         status="Test Store is disabled in Release. No purchase will be started."
         #endif
@@ -34,7 +48,7 @@ import RevenueCat
                         guard let self=self else{return};self.busy=false
                         self.isPro=info?.entitlements["evovid_pocket_pro"]?.isActive == true
                         if let error=infoError{self.isPro=false;self.status=error.localizedDescription}
-                        else{self.status=self.packages.isEmpty ? "No current Offering. Attach Test Store products in the dashboard." : "Real offerings loaded; entitlement refreshed."}
+                        else{self.status=self.packages.isEmpty ? "No current Offering. Attach Test Store products in the dashboard." : "Real offerings loaded; entitlement refreshed.";self.record("refresh",product:"current_customer_info")}
                     }
                 }
             }
@@ -46,8 +60,8 @@ import RevenueCat
         Purchases.shared.purchase(package:package){[weak self] _,info,error,cancelled in
             Task{@MainActor in
                 guard let self=self else{return};self.busy=false
-                if cancelled{self.status="Test purchase cancelled. No new purchase claimed.";return}
-                if let error=error{self.status=error.localizedDescription;return}
+                if cancelled{self.status="Test purchase cancelled. No new purchase claimed.";self.record("cancelled",product:package.storeProduct.productIdentifier);return}
+                if let error=error{self.status="Test purchase failed: "+error.localizedDescription;self.record("failed",product:package.storeProduct.productIdentifier);return}
                 self.isPro=info?.entitlements["evovid_pocket_pro"]?.isActive == true
                 self.status=self.isPro ? "Test purchase verified. Pro export unlocked." : "Purchase returned, but the pro entitlement is missing."
                 if self.isPro{self.record("test_purchase",product:package.storeProduct.productIdentifier)}
@@ -59,10 +73,10 @@ import RevenueCat
         Purchases.shared.restorePurchases{[weak self] info,error in
             Task{@MainActor in
                 guard let self=self else{return};self.busy=false
-                if let error=error{self.isPro=false;self.status=error.localizedDescription;return}
+                if let error=error{self.isPro=false;self.status="Test Store restore callback failed: "+error.localizedDescription;self.record("restore_failed",product:"current_customer_info");return}
                 self.isPro=info?.entitlements["evovid_pocket_pro"]?.isActive == true
-                self.status=self.isPro ? "Restore returned active pro." : "Restore finished. No active pro."
-                if self.isPro{self.record("restore",product:"existing_entitlement")}
+                self.status=self.isPro ? "Test Store returned current active pro. Not App Store recovery." : "Test Store returned no active pro. Not App Store recovery."
+                self.record("restore_current_customer_info",product:"existing_entitlement")
             }
         }
     }
@@ -71,5 +85,14 @@ import RevenueCat
         let object:[String:Any]=["operation":operation,"product":product,"entitlement":"evovid_pocket_pro","active":isPro,
             "observed_at":ISO8601DateFormatter().string(from:Date()),"environment":"RevenueCat Test Store","real_money":false]
         if let data=try? JSONSerialization.data(withJSONObject:object,options:[.prettyPrinted,.sortedKeys]),let text=String(data:data,encoding:.utf8){proof=text}
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--ci-test-store"){
+            audit.append(object)
+            let folder=FileManager.default.urls(for:.documentDirectory,in:.userDomainMask)[0]
+            if let data=try? JSONSerialization.data(withJSONObject:audit,options:[.prettyPrinted,.sortedKeys]){
+                try? data.write(to:folder.appendingPathComponent("test-store-audit.json"),options:.atomic)
+            }
+        }
+        #endif
     }
 }
